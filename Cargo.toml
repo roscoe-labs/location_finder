@@ -9,6 +9,8 @@ edition = "2021"
 clap = { version = "4.3.3", features = ["derive"] }
 csv = "1.2.2"
 log = "0.4.19"
+multimap = "0.9.0"
 serde = { version = "1.0.164", features = ["derive"] }
 simple_logger = "4.1.0"
 thiserror = "1.0.40"
+unicode-normalization = "0.1.22"
