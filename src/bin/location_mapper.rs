@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use clap::Parser;
-use location_finder::location_records_loader::{
+use location_finder::location_finder::{
     find_city_by_id, find_country_by_id, find_location, find_state_by_id, load_location_records,
     LocationMatchType,
 };
@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 unmatched_state,
             } => {
                 debug!("City/country match: city: {}, country: {}", city, country);
-                let state_record: Option<&location_finder::location_records_loader::LocationState> =
+                let state_record: Option<&location_finder::location_finder::LocationState> =
                     find_state_by_id(unmatched_state)?;
                 if let Some(state_record) = state_record {
                     let city_record = find_city_by_id(city).unwrap().unwrap();
