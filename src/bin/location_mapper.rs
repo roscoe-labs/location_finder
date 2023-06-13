@@ -12,12 +12,29 @@ struct Args {
     #[arg(long)]
     location_dataset_dir: Option<String>,
     #[arg(long)]
-    locations_to_find: String,
+    locations_to_map: String,
+    #[arg(long)]
+    org_locations_to_map: String,
 }
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct LocationInput {
     pub id: u64,
+    pub city: String,
+    pub state: String,
+    pub country: String,
+}
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct OrgRecord {
+    pub id: u64,
+    #[serde(rename = "orgHandle")]
+    pub org_handle: String,
+    pub name: String,
+    pub website: String,
+    #[serde(rename = "locationId")]
+    pub location_id: u64,
+    pub favicon: Option<String>,
     pub city: String,
     pub state: String,
     pub country: String,
@@ -33,14 +50,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if res.is_err() {
         info!("Error loading location records: {:?}", res);
     }
-    let mut reader = csv::Reader::from_path(args.locations_to_find)?;
-    let mut total_records = 0;
-    let mut full_matches = 0;
-    let mut city_country_matches = 0;
-    let mut unmatched_states: HashMap<(String, String), u32> = HashMap::new();
+    let mut reader = csv::Reader::from_path(args.locations_to_map)?;
+    let mut location_records_total = 0;
+    let mut location_records_full_match = 0;
+    let mut location_records_partial_match = 0;
+
+    let mut location_id_to_location_city_id: HashMap<u64, u64> = HashMap::new();
+
+    let mut partial_match_locations: HashMap<(String, String), u32> = HashMap::new();
     for location_input_record in reader.deserialize::<LocationInput>().flatten() {
         debug!("location_record: {:?}", location_input_record);
-        total_records += 1;
+        location_records_total += 1;
         let res = find_location(
             &location_input_record.city,
             &location_input_record.state,
@@ -56,7 +76,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "Full match: city: {}, state: {}, country: {}",
                     city, state, country
                 );
-                full_matches += 1;
+                location_records_full_match += 1;
+                location_id_to_location_city_id.insert(location_input_record.id, city);
             }
             LocationMatchType::CityCountryMatch {
                 city,
@@ -81,30 +102,68 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             city_record.name, state_record.name, country_record.name
                         ),
                     );
-                    let c = unmatched_states.get(&k).unwrap_or(&0) + 1;
-                    unmatched_states.insert(k, c);
+                    let c = partial_match_locations.get(&k).unwrap_or(&0) + 1;
+                    partial_match_locations.insert(k, c);
                 }
-                city_country_matches += 1;
+                location_records_partial_match += 1;
             }
             LocationMatchType::NoMatch => {
                 debug!("No match");
             }
         }
     }
+
     info!(
         "Total records: {}, matched records: {}, full matched records: {}, city country matches: {}, unmatched records: {}",
-        total_records,
-        full_matches + city_country_matches,
-        full_matches,
-        city_country_matches,
-        total_records - (full_matches + city_country_matches)
+        location_records_total,
+        location_records_full_match + location_records_partial_match,
+        location_records_full_match,
+        location_records_partial_match,
+        location_records_total - (location_records_full_match + location_records_partial_match)
     );
 
-    let mut count_vec: Vec<_> = unmatched_states.iter().collect();
+    let mut count_vec: Vec<_> = partial_match_locations.iter().collect();
     count_vec.sort_by(|a, b| b.1.cmp(a.1));
-    debug!("Unmatched states:");
+    debug!("Partial match locations:");
     for (k, v) in count_vec.iter() {
         debug!("{:?}  => {}", k, v);
     }
+
+    let mut reader = csv::Reader::from_path(args.org_locations_to_map)?;
+    let mut org_records_total = 0;
+    let mut org_records_full_match = 0;
+
+    let mut org_locations_not_found: HashMap<String, u32> = HashMap::new();
+
+    for org_record in reader.deserialize::<OrgRecord>().flatten() {
+        debug!("org_record: {:?}", org_record);
+        org_records_total += 1;
+        let location_city_id = location_id_to_location_city_id.get(&org_record.location_id);
+        if location_city_id.is_some() {
+            org_records_full_match += 1;
+        } else {
+            let k = format!(
+                "{}, {}, {}",
+                org_record.city, org_record.state, org_record.country
+            );
+            let c = org_locations_not_found.get(&k).unwrap_or(&0) + 1;
+            org_locations_not_found.insert(k, c);
+        }
+    }
+
+    info!(
+        "Total org records: {}, matched records: {}, unmatched records: {}",
+        org_records_total,
+        org_records_full_match,
+        org_records_total - org_records_full_match
+    );
+
+    let mut count_vec: Vec<_> = org_locations_not_found.iter().collect();
+    count_vec.sort_by(|a, b| b.1.cmp(a.1));
+    info!("Org locations not found:");
+    for (k, v) in count_vec.iter() {
+        info!("{:?}  => {}", k, v);
+    }
+
     Ok(())
 }
