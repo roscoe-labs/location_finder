@@ -374,6 +374,15 @@ pub fn find_location(
     Ok(LocationMatchType::NoMatch)
 }
 
+pub fn find_country_by_id(
+    country_id: u64,
+) -> Result<Option<&'static LocationCountry>, LocationFinderError> {
+    Ok(COUNTRY_ID_MAP
+        .get()
+        .ok_or(LocationFinderError::Loader)?
+        .get(&country_id))
+}
+
 pub fn find_state_by_id(
     state_id: u64,
 ) -> Result<Option<&'static LocationState>, LocationFinderError> {
@@ -381,4 +390,11 @@ pub fn find_state_by_id(
         .get()
         .ok_or(LocationFinderError::Loader)?
         .get(&state_id))
+}
+
+pub fn find_city_by_id(city_id: u64) -> Result<Option<&'static LocationCity>, LocationFinderError> {
+    Ok(CITY_ID_MAP
+        .get()
+        .ok_or(LocationFinderError::Loader)?
+        .get(&city_id))
 }

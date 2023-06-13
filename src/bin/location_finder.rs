@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use clap::Parser;
 use location_finder::location_records_loader::{
-    find_location, find_state_by_id, load_location_records, normalize_location_str, LocationBase,
+    find_city_by_id, find_country_by_id, find_location, find_state_by_id, load_location_records,
     LocationMatchType,
 };
 use log::{debug, info};
@@ -33,19 +33,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if res.is_err() {
         info!("Error loading location records: {:?}", res);
     }
-
     let mut reader = csv::Reader::from_path(args.locations_to_find)?;
     let mut total_records = 0;
     let mut full_matches = 0;
     let mut city_country_matches = 0;
     let mut unmatched_states: HashMap<(String, String), u32> = HashMap::new();
-    for location_record in reader.deserialize::<LocationInput>().flatten() {
-        debug!("location_record: {:?}", location_record);
+    for location_input_record in reader.deserialize::<LocationInput>().flatten() {
+        debug!("location_record: {:?}", location_input_record);
         total_records += 1;
         let res = find_location(
-            &location_record.city,
-            &location_record.state,
-            &location_record.country,
+            &location_input_record.city,
+            &location_input_record.state,
+            &location_input_record.country,
         )?;
         match res {
             LocationMatchType::FullMatch {
@@ -57,7 +56,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "Full match: city: {}, state: {}, country: {}",
                     city, state, country
                 );
-
                 full_matches += 1;
             }
             LocationMatchType::CityCountryMatch {
@@ -66,11 +64,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 unmatched_state,
             } => {
                 debug!("City/country match: city: {}, country: {}", city, country);
-                let l = find_state_by_id(unmatched_state)?;
-                if let Some(l) = l {
+                let state_record: Option<&location_finder::location_records_loader::LocationState> =
+                    find_state_by_id(unmatched_state)?;
+                if let Some(state_record) = state_record {
+                    let city_record = find_city_by_id(city).unwrap().unwrap();
+                    let country_record = find_country_by_id(country).unwrap().unwrap();
                     let k = (
-                        normalize_location_str(&location_record.state),
-                        normalize_location_str(l.name()),
+                        format!(
+                            "{}, {}, {}",
+                            location_input_record.city,
+                            location_input_record.state,
+                            location_input_record.country
+                        ),
+                        format!(
+                            "{}, {}, {}",
+                            city_record.name, state_record.name, country_record.name
+                        ),
                     );
                     let c = unmatched_states.get(&k).unwrap_or(&0) + 1;
                     unmatched_states.insert(k, c);
@@ -93,9 +102,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut count_vec: Vec<_> = unmatched_states.iter().collect();
     count_vec.sort_by(|a, b| b.1.cmp(a.1));
-    info!("Unmatched states:");
+    debug!("Unmatched states:");
     for (k, v) in count_vec.iter() {
-        info!("{:?}  => {}", k, v);
+        debug!("{:?}  => {}", k, v);
     }
     Ok(())
 }
