@@ -15,7 +15,7 @@ Pays-de-la-Loire, France|Pays de la Loire, France
 Provence-Alpes-Côte-d’Azur, France|Provence-Alpes-Cote d'Azur, France
 Bavaria, Germany|Bayern, Germany
 Munich, Bavaria, Germany|München, Bayern, Germany
-Frankfurt am Main, Hesse, Germany,|Frankfurt, Hessen, Germany
+Frankfurt am Main, Hesse, Germany|Frankfurt, Hessen, Germany
 Lower Saxony, Germany|Niedersachsen, Germany
 North Rhine-Westphalia, Germany|Nordrhein-Westfalen, Germany
 Rhineland-Palatinate, Germany|Rheinland-Pfalz, Germany

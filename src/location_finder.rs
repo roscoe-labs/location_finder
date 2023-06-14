@@ -201,7 +201,21 @@ fn init_place_alias_map() -> MultiMap<String, String> {
         let line = line.unwrap();
         let line_vec: Vec<&str> = line.split('|').map(|s| s.trim()).collect();
         if line_vec.len() == 2 {
-            place_alias_map.insert(line_vec[0].to_string(), line_vec[1].to_string());
+            let place_vec: Vec<&str> = line_vec[0].split(',').map(|s| s.trim()).collect();
+            let alias_vec: Vec<&str> = line_vec[1].split(',').map(|s| s.trim()).collect();
+            if place_vec.len() != alias_vec.len() {
+                error!("Invalid place alias line: {}", line);
+                continue;
+            }
+
+            for i in 0..place_vec.len() {
+                if place_vec[i] == alias_vec[i] {
+                    continue;
+                }
+                let place_key = &place_vec[i..].join(", ");
+                let alias_key = &alias_vec[i..].join(", ");
+                place_alias_map.insert(place_key.to_string(), alias_key.to_string());
+            }
         }
     }
     place_alias_map
