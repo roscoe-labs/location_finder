@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use clap::Parser;
 use location_finder::location_finder::{
-    find_city_by_id, find_country_by_id, find_location, find_state_by_id, load_location_records,
+    find_location, get_city_by_id, get_country_by_id, get_state_by_id, set_location_dataset_dir,
     LocationMatchType,
 };
 use log::{debug, info};
@@ -46,10 +46,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(ref location_dataset_dir) = args.location_dataset_dir {
         info!("location_dataset_dir: {}", location_dataset_dir);
     }
-    let res = load_location_records(args.location_dataset_dir);
-    if res.is_err() {
-        info!("Error loading location records: {:?}", res);
-    }
+    set_location_dataset_dir(args.location_dataset_dir);
+
     let mut reader = csv::Reader::from_path(args.locations_to_map)?;
     let mut location_records_total = 0;
     let mut location_records_full_match = 0;
@@ -79,32 +77,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 location_records_full_match += 1;
                 location_id_to_location_city_id.insert(location_input_record.id, city);
             }
-            LocationMatchType::CityCountryMatch {
+            LocationMatchType::PartialMatch {
                 city,
                 country,
                 unmatched_state,
             } => {
                 debug!("City/country match: city: {}, country: {}", city, country);
-                let state_record: Option<&location_finder::location_finder::LocationState> =
-                    find_state_by_id(unmatched_state)?;
-                if let Some(state_record) = state_record {
-                    let city_record = find_city_by_id(city).unwrap().unwrap();
-                    let country_record = find_country_by_id(country).unwrap().unwrap();
-                    let k = (
-                        format!(
-                            "{}, {}, {}",
-                            location_input_record.city,
-                            location_input_record.state,
-                            location_input_record.country
-                        ),
-                        format!(
-                            "{}, {}, {}",
-                            city_record.name, state_record.name, country_record.name
-                        ),
-                    );
-                    let c = partial_match_locations.get(&k).unwrap_or(&0) + 1;
-                    partial_match_locations.insert(k, c);
-                }
+                let state_record = get_state_by_id(unmatched_state).unwrap();
+                let city_record = get_city_by_id(city).unwrap();
+                let country_record = get_country_by_id(country).unwrap();
+                let k = (
+                    format!(
+                        "{}, {}, {}",
+                        location_input_record.city,
+                        location_input_record.state,
+                        location_input_record.country
+                    ),
+                    format!(
+                        "{}, {}, {}",
+                        city_record.name, state_record.name, country_record.name
+                    ),
+                );
+                let c = partial_match_locations.get(&k).unwrap_or(&0) + 1;
+                partial_match_locations.insert(k, c);
+
                 location_records_partial_match += 1;
             }
             LocationMatchType::NoMatch => {
@@ -114,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     info!(
-        "Total records: {}, matched records: {}, full matched records: {}, city country matches: {}, unmatched records: {}",
+        "Total records: {}, matched records: {}, full matched records: {}, partial matches: {}, unmatched records: {}",
         location_records_total,
         location_records_full_match + location_records_partial_match,
         location_records_full_match,
@@ -124,9 +120,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut count_vec: Vec<_> = partial_match_locations.iter().collect();
     count_vec.sort_by(|a, b| b.1.cmp(a.1));
-    debug!("Partial match locations:");
+    info!("Partial match locations:");
     for (k, v) in count_vec.iter() {
-        debug!("{:?}  => {}", k, v);
+        info!("{:?}  => {}", k, v);
     }
 
     let mut reader = csv::Reader::from_path(args.org_locations_to_map)?;
@@ -162,6 +158,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     count_vec.sort_by(|a, b| b.1.cmp(a.1));
     info!("Org locations not found:");
     for (k, v) in count_vec.iter() {
+        if v < &&10 {
+            break;
+        }
         info!("{:?}  => {}", k, v);
     }
 

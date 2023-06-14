@@ -1,20 +1,13 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::OnceLock,
-};
-
+use crate::error::LocationFinderError;
 use log::{debug, error, info};
 use multimap::MultiMap;
 use serde::de::DeserializeOwned;
-
+use std::{
+    collections::{HashMap, HashSet},
+    sync::OnceLock,
+    vec,
+};
 use unicode_normalization::UnicodeNormalization;
-
-use crate::error::LocationFinderError;
-
-pub trait LocationBase {
-    fn id(&self) -> u64;
-    fn name(&self) -> &str;
-}
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct LocationCountry {
@@ -39,16 +32,6 @@ pub struct LocationCountry {
     #[serde(rename = "emojiU")]
     pub emoji_u: String,
 }
-impl LocationBase for LocationCountry {
-    fn id(&self) -> u64 {
-        self.id
-    }
-    fn name(&self) -> &str {
-        &self.name
-    }
-}
-static COUNTRY_ID_MAP: OnceLock<HashMap<u64, LocationCountry>> = OnceLock::new();
-static COUNTRY_NAME_MAP: OnceLock<MultiMap<String, LocationCountry>> = OnceLock::new();
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct LocationState {
@@ -63,16 +46,6 @@ pub struct LocationState {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
 }
-impl LocationBase for LocationState {
-    fn id(&self) -> u64 {
-        self.id
-    }
-    fn name(&self) -> &str {
-        &self.name
-    }
-}
-static STATE_ID_MAP: OnceLock<HashMap<u64, LocationState>> = OnceLock::new();
-static STATE_NAME_MAP: OnceLock<MultiMap<String, LocationState>> = OnceLock::new();
 
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct LocationCity {
@@ -89,6 +62,12 @@ pub struct LocationCity {
     #[serde(rename = "wikiDataId")]
     pub wiki_data_id: String,
 }
+
+trait LocationBase {
+    fn id(&self) -> u64;
+    fn name(&self) -> &str;
+}
+
 impl LocationBase for LocationCity {
     fn id(&self) -> u64 {
         self.id
@@ -97,39 +76,72 @@ impl LocationBase for LocationCity {
         &self.name
     }
 }
-static CITY_ID_MAP: OnceLock<HashMap<u64, LocationCity>> = OnceLock::new();
-static CITY_NAME_MAP: OnceLock<MultiMap<String, LocationCity>> = OnceLock::new();
 
-pub fn load_location_records(
-    location_dataset_dir: Option<String>,
-) -> Result<(), LocationFinderError> {
-    let location_dataset_dir = location_dataset_dir
-        .unwrap_or("./submodules/countries-states-cities-database/csv".to_string());
-    load_records(
-        format!("{}/countries.csv", location_dataset_dir).as_str(),
-        &COUNTRY_ID_MAP,
-        &COUNTRY_NAME_MAP,
-    )?;
-    load_records(
-        format!("{}/states.csv", location_dataset_dir).as_str(),
-        &STATE_ID_MAP,
-        &STATE_NAME_MAP,
-    )?;
-    load_records(
-        format!("{}/cities.csv", location_dataset_dir).as_str(),
-        &CITY_ID_MAP,
-        &CITY_NAME_MAP,
-    )?;
-    Ok(())
+impl LocationBase for LocationCountry {
+    fn id(&self) -> u64 {
+        self.id
+    }
+    fn name(&self) -> &str {
+        &self.name
+    }
 }
 
-fn load_records<T: Clone + std::fmt::Debug + LocationBase + DeserializeOwned>(
+impl LocationBase for LocationState {
+    fn id(&self) -> u64 {
+        self.id
+    }
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+static LOCATION_DATASET_DIR: OnceLock<String> = OnceLock::new();
+fn init_location_dataset_dir() -> String {
+    "./submodules/countries-states-cities-database/csv".to_string()
+}
+pub fn set_location_dataset_dir(location_dataset_dir: Option<String>) {
+    if let Some(location_dataset_dir) = location_dataset_dir {
+        LOCATION_DATASET_DIR
+            .set(location_dataset_dir.clone())
+            .expect("Failed to set location dataset dir");
+        info!("Loading location data from: {}", location_dataset_dir);
+    }
+}
+
+static CITY_ID_MAP: OnceLock<HashMap<u64, LocationCity>> = OnceLock::new();
+fn init_city_id_map() -> HashMap<u64, LocationCity> {
+    let location_dataset_dir = LOCATION_DATASET_DIR.get_or_init(init_location_dataset_dir);
+    load_records_by_id(format!("{}/cities.csv", location_dataset_dir).as_str())
+        .expect("Failed to load countries")
+}
+pub fn get_city_by_id(id: u64) -> Option<&'static LocationCity> {
+    CITY_ID_MAP.get_or_init(init_city_id_map).get(&id)
+}
+
+static STATE_ID_MAP: OnceLock<HashMap<u64, LocationState>> = OnceLock::new();
+fn init_state_id_map() -> HashMap<u64, LocationState> {
+    let location_dataset_dir = LOCATION_DATASET_DIR.get_or_init(init_location_dataset_dir);
+    load_records_by_id(format!("{}/states.csv", location_dataset_dir).as_str())
+        .expect("Failed to load states")
+}
+pub fn get_state_by_id(id: u64) -> Option<&'static LocationState> {
+    STATE_ID_MAP.get_or_init(init_state_id_map).get(&id)
+}
+
+static COUNTRY_ID_MAP: OnceLock<HashMap<u64, LocationCountry>> = OnceLock::new();
+fn init_country_id_map() -> HashMap<u64, LocationCountry> {
+    let location_dataset_dir = LOCATION_DATASET_DIR.get_or_init(init_location_dataset_dir);
+    load_records_by_id(format!("{}/countries.csv", location_dataset_dir).as_str())
+        .expect("Failed to load countries")
+}
+pub fn get_country_by_id(id: u64) -> Option<&'static LocationCountry> {
+    COUNTRY_ID_MAP.get_or_init(init_country_id_map).get(&id)
+}
+
+fn load_records_by_id<T: Clone + std::fmt::Debug + LocationBase + DeserializeOwned>(
     filename: &str,
-    static_id_map: &OnceLock<HashMap<u64, T>>,
-    static_name_map: &OnceLock<MultiMap<String, T>>,
-) -> Result<(), LocationFinderError> {
+) -> Result<HashMap<u64, T>, LocationFinderError> {
     let mut id_map: HashMap<u64, T> = HashMap::new();
-    let mut name_map: MultiMap<String, T> = MultiMap::new();
     let mut reader = csv::Reader::from_path(filename)?;
     for result in reader.deserialize::<T>() {
         if let Ok(location_record) = result {
@@ -138,10 +150,6 @@ fn load_records<T: Clone + std::fmt::Debug + LocationBase + DeserializeOwned>(
                 error!("Duplicate location record: {:?}", location_record);
                 return Err(LocationFinderError::Loader);
             }
-            name_map.insert(
-                normalize_location_str(location_record.name()),
-                location_record.clone(),
-            );
         } else {
             error!(
                 "Error processing location record: {}",
@@ -149,21 +157,8 @@ fn load_records<T: Clone + std::fmt::Debug + LocationBase + DeserializeOwned>(
             );
         }
     }
-    static_id_map
-        .set(id_map)
-        .map_err(|_| LocationFinderError::Loader)?;
-    static_name_map
-        .set(name_map)
-        .map_err(|_| LocationFinderError::Loader)?;
-    info!(
-        "Loaded {} location records from {}",
-        static_id_map
-            .get()
-            .ok_or(LocationFinderError::Loader)?
-            .len(),
-        filename
-    );
-    Ok(())
+    info!("Loaded {} location records from {}", id_map.len(), filename);
+    Ok(id_map)
 }
 
 pub fn normalize_location_str(location_str: &str) -> String {
@@ -177,13 +172,147 @@ pub fn normalize_location_str(location_str: &str) -> String {
         .to_lowercase()
 }
 
+pub fn location_key(
+    normalized_city: Option<&str>,
+    normalized_state: Option<&str>,
+    normalized_country: Option<&str>,
+) -> String {
+    let mut key_parts: Vec<&str> = Vec::new();
+    if let Some(normalized_city) = normalized_city {
+        key_parts.push(normalized_city);
+    }
+    if let Some(normalized_state) = normalized_state {
+        key_parts.push(normalized_state);
+    }
+    if let Some(normalized_country) = normalized_country {
+        key_parts.push(normalized_country);
+    }
+    key_parts.join("_")
+}
+
+fn list_city_location_keys(city_record: &LocationCity) -> Vec<String> {
+    let mut location_keys = Vec::new();
+    let city_name = normalize_location_str(city_record.name());
+    let state_name = normalize_location_str(&city_record.state_name);
+    let country_name = normalize_location_str(&city_record.country_name);
+    location_keys.push(location_key(
+        Some(&city_name),
+        Some(&state_name),
+        Some(&country_name),
+    ));
+    location_keys.push(location_key(Some(&city_name), None, Some(&country_name)));
+    let state_record = get_state_by_id(city_record.state_id).unwrap();
+    let state_code = normalize_location_str(&state_record.state_code);
+    location_keys.push(location_key(
+        Some(&city_name),
+        Some(&state_code),
+        Some(&country_name),
+    ));
+    let country_record = get_country_by_id(city_record.country_id).unwrap();
+    let country_code_iso2 = normalize_location_str(&country_record.iso2);
+    location_keys.push(location_key(
+        Some(&city_name),
+        Some(&state_code),
+        Some(&country_code_iso2),
+    ));
+    location_keys.push(location_key(
+        Some(&city_name),
+        None,
+        Some(&country_code_iso2),
+    ));
+    let country_code_iso3 = normalize_location_str(&country_record.iso3);
+    location_keys.push(location_key(
+        Some(&city_name),
+        Some(&state_code),
+        Some(&country_code_iso3),
+    ));
+    location_keys.push(location_key(
+        Some(&city_name),
+        None,
+        Some(&country_code_iso3),
+    ));
+    location_keys
+}
+
+static CITY_NAME_MAP: OnceLock<MultiMap<String, u64>> = OnceLock::new();
+fn init_city_name_map() -> MultiMap<String, u64> {
+    let city_id_map = CITY_ID_MAP.get_or_init(init_city_id_map);
+    city_id_map
+        .values()
+        .fold(MultiMap::new(), |mut city_name_map, city| {
+            for location_key in list_city_location_keys(city) {
+                city_name_map.insert(location_key, city.id());
+            }
+            city_name_map
+        })
+}
+
+/**
+fn list_state_location_keys(state_record: &LocationState) -> Vec<String> {
+    let mut location_keys = Vec::new();
+    let state_name = normalize_location_str(state_record.name());
+    let country_name = normalize_location_str(&state_record.country_name);
+    location_keys.push(location_key(None, Some(&state_name), Some(&country_name)));
+    let country_record = get_country_by_id(state_record.country_id).unwrap();
+    let country_code_iso2 = normalize_location_str(&country_record.iso2);
+    location_keys.push(location_key(
+        None,
+        Some(&state_name),
+        Some(&country_code_iso2),
+    ));
+    let country_code_iso3 = normalize_location_str(&country_record.iso3);
+    location_keys.push(location_key(
+        None,
+        Some(&state_name),
+        Some(&country_code_iso3),
+    ));
+    location_keys
+}
+
+static STATE_NAME_MAP: OnceLock<MultiMap<String, u64>> = OnceLock::new();
+fn init_state_name_map() -> MultiMap<String, u64> {
+    let state_id_map = STATE_ID_MAP.get_or_init(init_state_id_map);
+    state_id_map
+        .values()
+        .fold(MultiMap::new(), |mut state_name_map, state| {
+            for location_key in list_state_location_keys(state) {
+                state_name_map.insert(location_key, state.id());
+            }
+            state_name_map
+        })
+}
+
+fn list_country_location_keys(country_record: &LocationCountry) -> Vec<String> {
+    let mut location_keys = Vec::new();
+    let country_name = normalize_location_str(country_record.name());
+    location_keys.push(location_key(None, None, Some(&country_name)));
+    let country_code_iso2 = normalize_location_str(&country_record.iso2);
+    location_keys.push(location_key(None, None, Some(&country_code_iso2)));
+    let country_code_iso3 = normalize_location_str(&country_record.iso3);
+    location_keys.push(location_key(None, None, Some(&country_code_iso3)));
+    location_keys
+}
+static COUNTRY_NAME_MAP: OnceLock<MultiMap<String, u64>> = OnceLock::new();
+fn init_country_name_map() -> MultiMap<String, u64> {
+    let country_id_map = COUNTRY_ID_MAP.get_or_init(init_country_id_map);
+    country_id_map
+        .values()
+        .fold(MultiMap::new(), |mut country_name_map, country| {
+            for location_key in list_country_location_keys(country) {
+                country_name_map.insert(location_key, country.id());
+            }
+            country_name_map
+        })
+}
+*/
+
 pub enum LocationMatchType {
     FullMatch {
         city: u64,
         state: u64,
         country: u64,
     },
-    CityCountryMatch {
+    PartialMatch {
         city: u64,
         country: u64,
         unmatched_state: u64,
@@ -242,6 +371,7 @@ fn init_partial_match_state_names() -> HashSet<(&'static str, &'static str)> {
         ("sodermanlands_lan", "sodermanland_county"),
         ("kronobergs_lan", "skane_county"),
         ("gotlands_lan", "gotland_county"),
+        ("gavleborgs_lan", "gavleborg_county"),
         ("wien", "vienna"),
         ("geneve", "geneva"),
         ("nordpasdecalais", "hautsdefrance"),
@@ -254,6 +384,7 @@ fn init_partial_match_state_names() -> HashSet<(&'static str, &'static str)> {
         ("al_qahirah", "cairo"),
         ("adis_abeba", "addis_ababa"),
         ("na_south_africa", "gauteng"),
+        ("nairobi_area", "nairobi_city"),
     ];
     for (state_name, unmatched_state_name) in state_names_vec {
         state_names.insert((state_name, unmatched_state_name));
@@ -262,139 +393,141 @@ fn init_partial_match_state_names() -> HashSet<(&'static str, &'static str)> {
     state_names
 }
 
+static LOCATION_RENAME_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+fn init_location_rename_map() -> HashMap<&'static str, &'static str> {
+    let mut location_rename_map = HashMap::new();
+    let location_rename_vec = vec![
+        (
+            "New York, New York, United States",
+            "New York City, New York, United States",
+        ),
+        (
+            "Washington, District of Columbia, United States",
+            "Washington D.C., District of Columbia, United States",
+        ),
+        (
+            "Bogotá, Distrito Especial, Colombia",
+            "Bogotá D.C., Bogotá D.C., Colombia",
+        ),
+    ];
+    for (location_name, renamed_location_name) in location_rename_vec {
+        location_rename_map.insert(location_name, renamed_location_name);
+    }
+    location_rename_map
+}
+
+fn remap_location<'a>(
+    city_in: &'a str,
+    state_in: &'a str,
+    country_in: &'a str,
+) -> (&'a str, &'a str, &'a str) {
+    let remapped_location = LOCATION_RENAME_MAP
+        .get_or_init(init_location_rename_map)
+        .get(format!("{}, {}, {}", city_in, state_in, country_in).as_str());
+    if let Some(remapped_location) = remapped_location {
+        let remapped_location = remapped_location.split(", ").collect::<Vec<&str>>();
+        return (
+            remapped_location[0],
+            remapped_location[1],
+            remapped_location[2],
+        );
+    }
+    (city_in, state_in, country_in)
+}
+
 pub fn find_location(
     city_in: &str,
     state_in: &str,
     country_in: &str,
 ) -> Result<LocationMatchType, LocationFinderError> {
+    let (city_in, state_in, country_in) = remap_location(city_in, state_in, country_in);
     let city = normalize_location_str(city_in);
     let state = normalize_location_str(state_in);
     let country = normalize_location_str(country_in);
-    let city_name_matches = CITY_NAME_MAP
-        .get()
-        .ok_or(LocationFinderError::Loader)?
-        .get_vec(&city);
-    let state_name_matches = STATE_NAME_MAP
-        .get()
-        .ok_or(LocationFinderError::Loader)?
-        .get_vec(&state);
-    let country_name_matches = COUNTRY_NAME_MAP
-        .get()
-        .ok_or(LocationFinderError::Loader)?
-        .get_vec(&country);
 
+    let city_map_key = location_key(Some(&city), Some(&state), Some(&country));
+    let city_name_matches = CITY_NAME_MAP
+        .get_or_init(init_city_name_map)
+        .get_vec(&city_map_key);
     if let Some(city_name_matches) = city_name_matches {
-        for city in city_name_matches {
-            if let Some(state_name_matches) = state_name_matches {
-                for state in state_name_matches {
-                    if let Some(country_name_matches) = country_name_matches {
-                        for country in country_name_matches {
-                            if city.state_id == state.id()
-                                && city.country_id == country.id()
-                                && state.country_id == country.id()
-                            {
-                                return Ok(LocationMatchType::FullMatch {
-                                    city: city.id(),
-                                    state: state.id(),
-                                    country: country.id(),
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for city in city_name_matches {
-            if let Some(country_name_matches) = country_name_matches {
-                for country in country_name_matches {
-                    if PARTIAL_MATCH_COUNTRIES_TO_SKIP
-                        .get_or_init(init_partial_match_countries_to_skip)
-                        .get(country.name())
-                        .is_some()
-                    {
-                        continue;
-                    }
-                    if city.country_id == country.id() {
-                        if PARTIAL_MATCH_COUNTRIES_TO_OVERRIDE
-                            .get_or_init(init_partial_match_countries_to_override)
-                            .get(country.name())
-                            .is_some()
-                        {
-                            return Ok(LocationMatchType::FullMatch {
-                                city: city.id(),
-                                state: city.state_id,
-                                country: country.id(),
-                            });
-                        }
-                        if let Some(unmatched_location_state) = find_state_by_id(city.state_id)? {
-                            let unmatched_state_name =
-                                normalize_location_str(unmatched_location_state.name());
-                            if unmatched_state_name.contains(&state)
-                                || state.contains(&unmatched_state_name)
-                            {
-                                debug!(
-                                    "Partial name match: {} vs {}",
-                                    state_in,
-                                    unmatched_location_state.name()
-                                );
-                                return Ok(LocationMatchType::FullMatch {
-                                    city: city.id(),
-                                    state: city.state_id,
-                                    country: country.id(),
-                                });
-                            }
-                            if PARTIAL_MATCH_STATE_NAMES
-                                .get_or_init(init_partial_match_state_names)
-                                .get(&(&state, unmatched_state_name.as_str()))
-                                .is_some()
-                            {
-                                debug!(
-                                    "Partial name match: {} vs {}",
-                                    state_in,
-                                    unmatched_location_state.name()
-                                );
-                                return Ok(LocationMatchType::FullMatch {
-                                    city: city.id(),
-                                    state: city.state_id,
-                                    country: country.id(),
-                                });
-                            }
-                        }
-                        return Ok(LocationMatchType::CityCountryMatch {
-                            city: city.id(),
-                            country: country.id(),
-                            unmatched_state: city.state_id,
-                        });
-                    }
-                }
-            }
+        if let Some(city_id) = city_name_matches.iter().next() {
+            let city_record = get_city_by_id(*city_id).unwrap();
+            let state_record = get_state_by_id(city_record.state_id).unwrap();
+            let country_record = get_country_by_id(city_record.country_id).unwrap();
+            return Ok(LocationMatchType::FullMatch {
+                city: city_record.id,
+                state: state_record.id,
+                country: country_record.id,
+            });
         }
     }
 
+    let city_map_key = location_key(Some(&city), None, Some(&country));
+    let city_name_matches = CITY_NAME_MAP
+        .get_or_init(init_city_name_map)
+        .get_vec(&city_map_key);
+    let mut partial_matches: Vec<LocationMatchType> = vec![];
+    if let Some(city_name_matches) = city_name_matches {
+        for city_id in city_name_matches {
+            let city_record = get_city_by_id(*city_id).unwrap();
+            let country_record = get_country_by_id(city_record.country_id).unwrap();
+            if PARTIAL_MATCH_COUNTRIES_TO_SKIP
+                .get_or_init(init_partial_match_countries_to_skip)
+                .get(country_record.name())
+                .is_some()
+            {
+                continue;
+            }
+            if PARTIAL_MATCH_COUNTRIES_TO_OVERRIDE
+                .get_or_init(init_partial_match_countries_to_override)
+                .get(country_record.name())
+                .is_some()
+            {
+                return Ok(LocationMatchType::FullMatch {
+                    city: city_record.id,
+                    state: city_record.state_id,
+                    country: city_record.country_id,
+                });
+            }
+            let unmatched_state_record = get_state_by_id(city_record.state_id).unwrap();
+            let unmatched_state_name = normalize_location_str(unmatched_state_record.name());
+            if unmatched_state_name.contains(&state) || state.contains(&unmatched_state_name) {
+                debug!(
+                    "Partial name match: {} vs {}",
+                    state_in,
+                    unmatched_state_record.name()
+                );
+                return Ok(LocationMatchType::FullMatch {
+                    city: city_record.id,
+                    state: city_record.state_id,
+                    country: city_record.country_id,
+                });
+            }
+            if PARTIAL_MATCH_STATE_NAMES
+                .get_or_init(init_partial_match_state_names)
+                .get(&(&state, unmatched_state_name.as_str()))
+                .is_some()
+            {
+                debug!(
+                    "Partial name match: {} vs {}",
+                    state_in,
+                    unmatched_state_record.name()
+                );
+                return Ok(LocationMatchType::FullMatch {
+                    city: city_record.id,
+                    state: city_record.state_id,
+                    country: city_record.country_id,
+                });
+            }
+            partial_matches.push(LocationMatchType::PartialMatch {
+                city: city_record.id,
+                country: city_record.country_id,
+                unmatched_state: city_record.state_id,
+            });
+        }
+        if partial_matches.len() == 1 {
+            return Ok(partial_matches.into_iter().next().unwrap());
+        }
+    }
     Ok(LocationMatchType::NoMatch)
-}
-
-pub fn find_country_by_id(
-    country_id: u64,
-) -> Result<Option<&'static LocationCountry>, LocationFinderError> {
-    Ok(COUNTRY_ID_MAP
-        .get()
-        .ok_or(LocationFinderError::Loader)?
-        .get(&country_id))
-}
-
-pub fn find_state_by_id(
-    state_id: u64,
-) -> Result<Option<&'static LocationState>, LocationFinderError> {
-    Ok(STATE_ID_MAP
-        .get()
-        .ok_or(LocationFinderError::Loader)?
-        .get(&state_id))
-}
-
-pub fn find_city_by_id(city_id: u64) -> Result<Option<&'static LocationCity>, LocationFinderError> {
-    Ok(CITY_ID_MAP
-        .get()
-        .ok_or(LocationFinderError::Loader)?
-        .get(&city_id))
 }
