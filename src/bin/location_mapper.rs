@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut location_id_to_location_city_id: HashMap<u64, u64> = HashMap::new();
 
-    let mut partial_match_locations: HashMap<(String, String), u32> = HashMap::new();
+    let mut partial_match_locations: HashMap<String, u32> = HashMap::new();
     for location_input_record in reader.deserialize::<LocationInput>().flatten() {
         debug!("location_record: {:?}", location_input_record);
         location_records_total += 1;
@@ -86,17 +86,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let state_record = get_state_by_id(unmatched_state).unwrap();
                 let city_record = get_city_by_id(city).unwrap();
                 let country_record = get_country_by_id(country).unwrap();
-                let k = (
-                    format!(
-                        "{}, {}, {}",
-                        location_input_record.city,
-                        location_input_record.state,
-                        location_input_record.country
-                    ),
-                    format!(
-                        "{}, {}, {}",
-                        city_record.name, state_record.name, country_record.name
-                    ),
+                let k = format!(
+                    "{}, {}, {}|{}, {}, {}",
+                    city_record.name,
+                    state_record.name,
+                    country_record.name,
+                    location_input_record.city,
+                    location_input_record.state,
+                    location_input_record.country
                 );
                 let c = partial_match_locations.get(&k).unwrap_or(&0) + 1;
                 partial_match_locations.insert(k, c);

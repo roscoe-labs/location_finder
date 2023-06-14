@@ -4,6 +4,8 @@ use multimap::MultiMap;
 use serde::de::DeserializeOwned;
 use std::{
     collections::{HashMap, HashSet},
+    fs::File,
+    io::{self, BufRead},
     sync::OnceLock,
     vec,
 };
@@ -190,10 +192,45 @@ pub fn location_key(
     key_parts.join("_")
 }
 
-fn list_city_location_keys(city_record: &LocationCity) -> Vec<String> {
+static PLACE_ALIAS_MAP: OnceLock<MultiMap<String, String>> = OnceLock::new();
+fn init_place_alias_map() -> MultiMap<String, String> {
+    let mut place_alias_map = MultiMap::new();
+    let place_alias_file = File::open("./data/place_alias.txt").unwrap();
+    let buf_reader = io::BufReader::new(place_alias_file);
+    for line in buf_reader.lines() {
+        let line = line.unwrap();
+        let line_vec: Vec<&str> = line.split('|').map(|s| s.trim()).collect();
+        if line_vec.len() == 2 {
+            place_alias_map.insert(line_vec[0].to_string(), line_vec[1].to_string());
+        }
+    }
+    place_alias_map
+}
+
+fn find_alias_city_names(city_record: &LocationCity) -> Option<&Vec<String>> {
+    let alias_place_lookup_key = format!(
+        "{}, {}, {}",
+        city_record.name, city_record.state_name, city_record.country_name
+    );
+    PLACE_ALIAS_MAP
+        .get_or_init(init_place_alias_map)
+        .get_vec(alias_place_lookup_key.as_str())
+}
+fn find_alias_state_names(state_record: &LocationState) -> Option<&Vec<String>> {
+    let alias_place_lookup_key = format!("{}, {}", state_record.name, state_record.country_name);
+    PLACE_ALIAS_MAP
+        .get_or_init(init_place_alias_map)
+        .get_vec(alias_place_lookup_key.as_str())
+}
+
+fn list_city_location_keys(
+    city_record: &LocationCity,
+    city_alias: Option<&str>,
+    state_alias: Option<&str>,
+) -> Vec<String> {
     let mut location_keys = Vec::new();
-    let city_name = normalize_location_str(city_record.name());
-    let state_name = normalize_location_str(&city_record.state_name);
+    let city_name = normalize_location_str(city_alias.unwrap_or(city_record.name()));
+    let state_name = normalize_location_str(state_alias.unwrap_or(&city_record.state_name));
     let country_name = normalize_location_str(&city_record.country_name);
     location_keys.push(location_key(
         Some(&city_name),
@@ -239,10 +276,59 @@ fn init_city_name_map() -> MultiMap<String, u64> {
     let city_id_map = CITY_ID_MAP.get_or_init(init_city_id_map);
     city_id_map
         .values()
-        .fold(MultiMap::new(), |mut city_name_map, city| {
-            for location_key in list_city_location_keys(city) {
-                city_name_map.insert(location_key, city.id());
+        .fold(MultiMap::new(), |mut city_name_map, city_record| {
+            let mut location_keys_set: HashSet<String> =
+                list_city_location_keys(city_record, None, None)
+                    .into_iter()
+                    .collect();
+
+            if let Some(alias_place_names) = find_alias_city_names(city_record) {
+                for alias_place_name in alias_place_names {
+                    let name_vec: Vec<&str> =
+                        alias_place_name.split(',').map(|s| s.trim()).collect();
+                    if city_record.name != name_vec[0] && city_record.state_name != name_vec[1] {
+                        list_city_location_keys(city_record, Some(name_vec[0]), Some(name_vec[1]))
+                            .into_iter()
+                            .for_each(|location_key| {
+                                location_keys_set.insert(location_key);
+                            });
+                    }
+                    if city_record.state_name != name_vec[1] {
+                        list_city_location_keys(city_record, None, Some(name_vec[1]))
+                            .into_iter()
+                            .for_each(|location_key| {
+                                location_keys_set.insert(location_key);
+                            });
+                    }
+                    if city_record.name != name_vec[0] {
+                        list_city_location_keys(city_record, Some(name_vec[0]), None)
+                            .into_iter()
+                            .for_each(|location_key| {
+                                location_keys_set.insert(location_key);
+                            });
+                    }
+                }
             }
+
+            let state_record = get_state_by_id(city_record.state_id).unwrap();
+            if let Some(alias_place_names) = find_alias_state_names(state_record) {
+                for alias_place_name in alias_place_names {
+                    let name_vec: Vec<&str> =
+                        alias_place_name.split(',').map(|s| s.trim()).collect();
+                    if state_record.name != name_vec[0] {
+                        list_city_location_keys(city_record, None, Some(name_vec[0]))
+                            .into_iter()
+                            .for_each(|location_key| {
+                                location_keys_set.insert(location_key);
+                            });
+                    }
+                }
+            }
+
+            for location_key in location_keys_set {
+                city_name_map.insert(location_key, city_record.id());
+            }
+
             city_name_map
         })
 }
@@ -334,113 +420,11 @@ fn init_partial_match_countries_to_override() -> HashSet<&'static str> {
     countries_to_override
 }
 
-static PARTIAL_MATCH_STATE_NAMES: OnceLock<HashSet<(&'static str, &'static str)>> = OnceLock::new();
-fn init_partial_match_state_names() -> HashSet<(&'static str, &'static str)> {
-    let mut state_names = HashSet::new();
-    let state_names_vec = vec![
-        ("lombardia", "lombardy"),
-        ("toscana", "tuscany"),
-        ("piemonte", "piedmont"),
-        ("sardegna", "sardinia"),
-        ("sicilia", "sicily"),
-        ("puglia", "apulia"),
-        ("trentinoalto_adige", "trentinosouth_tyrol"),
-        ("bayern", "bavaria"),
-        ("sachsen", "saxony"),
-        ("niedersachsen", "lower_saxony"),
-        ("rheinlandpfalz", "rhinelandpalatinate"),
-        ("nordrheinwestfalen", "north_rhinewestphalia"),
-        ("catalonia", "barcelona"),
-        ("pais_vasco", "gipuzkoa"),
-        ("pais_vasco", "bizkaia"),
-        ("galicia", "pontevedra"),
-        ("galicia", "a_coruna"),
-        ("andalucia", "sevilla"),
-        ("stockholms_lan", "stockholm_county"),
-        ("skane_lan", "skane_county"),
-        ("kalmar_lan", "kalmar_county"),
-        ("vasternorrlands_lan", "vasternorrland_county"),
-        ("vasterbottens_lan", "vasterbotten_county"),
-        ("uppsala_lan", "uppsala_county"),
-        ("norrbottens_lan", "norrbotten_county"),
-        ("hallands_lan", "halland_county"),
-        ("ostergotlands_lan", "ostergotland_county"),
-        ("dalarnas_lan", "dalarna_county"),
-        ("vastmanlands_lan", "vastmanland_county"),
-        ("varmlands_lan", "varmland_county"),
-        ("sodermanlands_lan", "sodermanland_county"),
-        ("kronobergs_lan", "skane_county"),
-        ("gotlands_lan", "gotland_county"),
-        ("gavleborgs_lan", "gavleborg_county"),
-        ("wien", "vienna"),
-        ("geneve", "geneva"),
-        ("nordpasdecalais", "hautsdefrance"),
-        ("midipyrenees", "occitanie"),
-        ("languedocroussillon", "occitanie"),
-        ("provencealpescote_dazur", "provencealpescotedazur"),
-        ("pays_de_la_loire", "paysdelaloire"),
-        ("andhra_pradesh", "telangana"),
-        ("hamerkaz", "central_district"),
-        ("al_qahirah", "cairo"),
-        ("adis_abeba", "addis_ababa"),
-        ("na_south_africa", "gauteng"),
-        ("nairobi_area", "nairobi_city"),
-    ];
-    for (state_name, unmatched_state_name) in state_names_vec {
-        state_names.insert((state_name, unmatched_state_name));
-        state_names.insert((unmatched_state_name, state_name));
-    }
-    state_names
-}
-
-static LOCATION_RENAME_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
-fn init_location_rename_map() -> HashMap<&'static str, &'static str> {
-    let mut location_rename_map = HashMap::new();
-    let location_rename_vec = vec![
-        (
-            "New York, New York, United States",
-            "New York City, New York, United States",
-        ),
-        (
-            "Washington, District of Columbia, United States",
-            "Washington D.C., District of Columbia, United States",
-        ),
-        (
-            "Bogotá, Distrito Especial, Colombia",
-            "Bogotá D.C., Bogotá D.C., Colombia",
-        ),
-    ];
-    for (location_name, renamed_location_name) in location_rename_vec {
-        location_rename_map.insert(location_name, renamed_location_name);
-    }
-    location_rename_map
-}
-
-fn remap_location<'a>(
-    city_in: &'a str,
-    state_in: &'a str,
-    country_in: &'a str,
-) -> (&'a str, &'a str, &'a str) {
-    let remapped_location = LOCATION_RENAME_MAP
-        .get_or_init(init_location_rename_map)
-        .get(format!("{}, {}, {}", city_in, state_in, country_in).as_str());
-    if let Some(remapped_location) = remapped_location {
-        let remapped_location = remapped_location.split(", ").collect::<Vec<&str>>();
-        return (
-            remapped_location[0],
-            remapped_location[1],
-            remapped_location[2],
-        );
-    }
-    (city_in, state_in, country_in)
-}
-
 pub fn find_location(
     city_in: &str,
     state_in: &str,
     country_in: &str,
 ) -> Result<LocationMatchType, LocationFinderError> {
-    let (city_in, state_in, country_in) = remap_location(city_in, state_in, country_in);
     let city = normalize_location_str(city_in);
     let state = normalize_location_str(state_in);
     let country = normalize_location_str(country_in);
@@ -492,22 +476,6 @@ pub fn find_location(
             let unmatched_state_record = get_state_by_id(city_record.state_id).unwrap();
             let unmatched_state_name = normalize_location_str(unmatched_state_record.name());
             if unmatched_state_name.contains(&state) || state.contains(&unmatched_state_name) {
-                debug!(
-                    "Partial name match: {} vs {}",
-                    state_in,
-                    unmatched_state_record.name()
-                );
-                return Ok(LocationMatchType::FullMatch {
-                    city: city_record.id,
-                    state: city_record.state_id,
-                    country: city_record.country_id,
-                });
-            }
-            if PARTIAL_MATCH_STATE_NAMES
-                .get_or_init(init_partial_match_state_names)
-                .get(&(&state, unmatched_state_name.as_str()))
-                .is_some()
-            {
                 debug!(
                     "Partial name match: {} vs {}",
                     state_in,

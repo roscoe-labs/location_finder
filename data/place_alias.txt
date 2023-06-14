@@ -1,0 +1,87 @@
+New York City, New York, United States|New York, New York, United States
+Washington D.C., District of Columbia, United States|Washington, District of Columbia, United States
+Bogotá D.C., Bogotá D.C., Colombia|Bogotá, Distrito Especial, Colombia
+Nairobi, Nairobi City, Kenya|Nairobi, Nairobi Area, Kenya
+Singapore, Central Singapore, Singapore|Singapore, Central Region, Singapore
+Milan, Lombardy, Italy|Milano, Lombardia, Italy
+Bangalore Urban, Karnataka, India|Bangalore, Karnataka, India
+Buenos Aires, Buenos Aires, Argentina|Buenos Aires, Distrito Federal, Argentina
+Vienna, Austria|Wien, Austria
+Lombardy, Italy|Lombardia, Italy
+Bavaria, Germany|Bayern, Germany
+North Rhine-Westphalia, Germany|Nordrhein-Westfalen, Germany
+Tuscany, Italy|Toscana, Italy
+Stockholm County, Sweden|Stockholms Lan, Sweden
+Piedmont, Italy|Piemonte, Italy
+Barcelona, Spain|Catalonia, Spain
+Provence-Alpes-Côte-d’Azur, France|Provence-Alpes-Cote d'Azur, France
+Gauteng, South Africa|NA - South Africa, South Africa
+Apulia, Italy|Puglia, Italy
+Hauts-de-France, France|Nord-Pas-de-Calais, France
+Central District, Israel|HaMerkaz, Israel
+Occitanie, France|Midi-Pyrenees, France
+Skåne County, Sweden|Skane Lan, Sweden
+Occitanie, France|Languedoc-Roussillon, France
+Béja, Tunisia|Kassrine, Tunisia
+Sardinia, Italy|Sardegna, Italy
+Trentino-South Tyrol, Italy|Trentino-Alto Adige, Italy
+Pays-de-la-Loire, France|Pays de la Loire, France
+Rhineland-Palatinate, Germany|Rheinland-Pfalz, Germany
+Bizkaia, Spain|Pais Vasco, Spain
+Saxony, Germany|Sachsen, Germany
+Sicily, Italy|Sicilia, Italy
+Pontevedra, Spain|Galicia, Spain
+Gipuzkoa, Spain|Pais Vasco, Spain
+Lower Saxony, Germany|Niedersachsen, Germany
+Western Cape, South Africa|NA - South Africa, South Africa
+Sevilla, Spain|Andalucia, Spain
+Ravenna, Italy|Emilia-Romagna, Italy
+Cairo, Egypt|Al Qahirah, Egypt
+Dalarna County, Sweden|Dalarnas Lan, Sweden
+Valladolid, Spain|Castilla y Leon, Spain
+Telangana, India|Andhra Pradesh, India
+Lesser Poland Voivodeship, Poland|Malopolskie, Poland
+Norrbotten County, Sweden|Norrbottens Lan, Sweden
+Västmanland County, Sweden|Vastmanlands Lan, Sweden
+Uusimaa, Finland|Southern Finland, Finland
+Nakuru, Kenya|Rift Valley, Kenya
+Nouvelle-Aquitaine, France|Poitou-Charentes, France
+Quebec, Canada|Ontario, Canada
+Uppsala County, Sweden|Uppsala Lan, Sweden
+Huesca, Spain|Aragon, Spain
+Málaga, Spain|Andalucia, Spain
+Bahia, Brazil|Sao Paulo, Brazil
+A Coruña, Spain|Galicia, Spain
+Kalmar County, Sweden|Kalmar Lan, Sweden
+Hauts-de-France, France|Picardie, France
+Metro Manila, Philippines|Rizal, Philippines
+Västerbotten County, Sweden|Vasterbottens Lan, Sweden
+Almeria, Spain|Andalucia, Spain
+Halland County, Sweden|Hallands Lan, Sweden
+Östergötland County, Sweden|Ostergotlands Lan, Sweden
+Västernorrland County, Sweden|Vasternorrlands Lan, Sweden
+Córdoba, Spain|Andalucia, Spain
+Casablanca-Settat, Morocco|Grand Casablanca, Morocco
+Leinster, Ireland|Dublin, Ireland
+Tarragona, Spain|Catalonia, Spain
+Abruzzo, Italy|Abruzzi, Italy
+Grand-Est, France|Alsace, France
+Granada, Spain|Andalucia, Spain
+Saxony-Anhalt, Germany|Sachsen-Anhalt, Germany
+Girona, Spain|Catalonia, Spain
+Alexandria, Egypt|Al Iskandariyah, Egypt
+Västra Götaland County, Sweden|Vastra Gotaland, Sweden
+Göteborg, Västra Götaland County, Sweden|Gothenburg, Västra Götaland County, Sweden
+Montréal, Quebec, Canada|Pierrefonds, Quebec, Canada
+Montréal, Quebec, Canada|Saint-bruno-de-montarville, Quebec, Canada
+Montréal, Quebec, Canada|Saint Laurent, Quebec, Canada
+Montréal, Quebec, Canada|Lachine, Quebec, Canada
+Montréal, Quebec, Canada|Lasalle, Quebec, Canada
+Munich, Bavaria, Germany|München, Bayern, Germany
+Munich, Bavaria, Germany|Munich, Bayern, Germany
+Tel Aviv District, Israel|Tel Aviv, Israel
+Tel Aviv, Tel Aviv District, Israel|Tel Aviv-yafo, Tel Aviv, Israel
+Rome, Lazio, Italy|Roma, Lazio, Italy
+Jakarta, DKI Jakarta, Indonesia|Jakarta, Jakarta Raya, Indonesia
+Boston, Massachusetts, United States|Allston, Massachusetts, United States
+St. Louis, Missouri, United States|Saint Louis, Missouri, United States
