@@ -1,87 +1,80 @@
-New York City, New York, United States|New York, New York, United States
-Washington D.C., District of Columbia, United States|Washington, District of Columbia, United States
-Bogotá D.C., Bogotá D.C., Colombia|Bogotá, Distrito Especial, Colombia
-Nairobi, Nairobi City, Kenya|Nairobi, Nairobi Area, Kenya
-Singapore, Central Singapore, Singapore|Singapore, Central Region, Singapore
-Milan, Lombardy, Italy|Milano, Lombardia, Italy
-Bangalore Urban, Karnataka, India|Bangalore, Karnataka, India
 Buenos Aires, Buenos Aires, Argentina|Buenos Aires, Distrito Federal, Argentina
 Vienna, Austria|Wien, Austria
-Lombardy, Italy|Lombardia, Italy
-Bavaria, Germany|Bayern, Germany
-North Rhine-Westphalia, Germany|Nordrhein-Westfalen, Germany
-Tuscany, Italy|Toscana, Italy
-Stockholm County, Sweden|Stockholms Lan, Sweden
-Piedmont, Italy|Piemonte, Italy
-Barcelona, Spain|Catalonia, Spain
-Provence-Alpes-Côte-d’Azur, France|Provence-Alpes-Cote d'Azur, France
-Gauteng, South Africa|NA - South Africa, South Africa
-Apulia, Italy|Puglia, Italy
-Hauts-de-France, France|Nord-Pas-de-Calais, France
-Central District, Israel|HaMerkaz, Israel
-Occitanie, France|Midi-Pyrenees, France
-Skåne County, Sweden|Skane Lan, Sweden
-Occitanie, France|Languedoc-Roussillon, France
-Béja, Tunisia|Kassrine, Tunisia
-Sardinia, Italy|Sardegna, Italy
-Trentino-South Tyrol, Italy|Trentino-Alto Adige, Italy
-Pays-de-la-Loire, France|Pays de la Loire, France
-Rhineland-Palatinate, Germany|Rheinland-Pfalz, Germany
-Bizkaia, Spain|Pais Vasco, Spain
-Saxony, Germany|Sachsen, Germany
-Sicily, Italy|Sicilia, Italy
-Pontevedra, Spain|Galicia, Spain
-Gipuzkoa, Spain|Pais Vasco, Spain
-Lower Saxony, Germany|Niedersachsen, Germany
-Western Cape, South Africa|NA - South Africa, South Africa
-Sevilla, Spain|Andalucia, Spain
-Ravenna, Italy|Emilia-Romagna, Italy
-Cairo, Egypt|Al Qahirah, Egypt
-Dalarna County, Sweden|Dalarnas Lan, Sweden
-Valladolid, Spain|Castilla y Leon, Spain
-Telangana, India|Andhra Pradesh, India
-Lesser Poland Voivodeship, Poland|Malopolskie, Poland
-Norrbotten County, Sweden|Norrbottens Lan, Sweden
-Västmanland County, Sweden|Vastmanlands Lan, Sweden
-Uusimaa, Finland|Southern Finland, Finland
-Nakuru, Kenya|Rift Valley, Kenya
-Nouvelle-Aquitaine, France|Poitou-Charentes, France
-Quebec, Canada|Ontario, Canada
-Uppsala County, Sweden|Uppsala Lan, Sweden
-Huesca, Spain|Aragon, Spain
-Málaga, Spain|Andalucia, Spain
 Bahia, Brazil|Sao Paulo, Brazil
-A Coruña, Spain|Galicia, Spain
-Kalmar County, Sweden|Kalmar Lan, Sweden
-Hauts-de-France, France|Picardie, France
-Metro Manila, Philippines|Rizal, Philippines
-Västerbotten County, Sweden|Vasterbottens Lan, Sweden
-Almeria, Spain|Andalucia, Spain
-Halland County, Sweden|Hallands Lan, Sweden
-Östergötland County, Sweden|Ostergotlands Lan, Sweden
-Västernorrland County, Sweden|Vasternorrlands Lan, Sweden
-Córdoba, Spain|Andalucia, Spain
-Casablanca-Settat, Morocco|Grand Casablanca, Morocco
-Leinster, Ireland|Dublin, Ireland
-Tarragona, Spain|Catalonia, Spain
-Abruzzo, Italy|Abruzzi, Italy
-Grand-Est, France|Alsace, France
-Granada, Spain|Andalucia, Spain
-Saxony-Anhalt, Germany|Sachsen-Anhalt, Germany
-Girona, Spain|Catalonia, Spain
-Alexandria, Egypt|Al Iskandariyah, Egypt
-Västra Götaland County, Sweden|Vastra Gotaland, Sweden
-Göteborg, Västra Götaland County, Sweden|Gothenburg, Västra Götaland County, Sweden
-Montréal, Quebec, Canada|Pierrefonds, Quebec, Canada
-Montréal, Quebec, Canada|Saint-bruno-de-montarville, Quebec, Canada
-Montréal, Quebec, Canada|Saint Laurent, Quebec, Canada
-Montréal, Quebec, Canada|Lachine, Quebec, Canada
+Quebec, Canada|Ontario, Canada
 Montréal, Quebec, Canada|Lasalle, Quebec, Canada
-Munich, Bavaria, Germany|München, Bayern, Germany
+Bogotá D.C., Bogotá D.C., Colombia|Bogotá, Distrito Especial, Colombia
+Alexandria, Egypt|Al Iskandariyah, Egypt
+Cairo, Egypt|Al Qahirah, Egypt
+Uusimaa, Finland|Southern Finland, Finland
+Grand-Est, France|Alsace, France
+Hauts-de-France, France|Picardie, France
+Nouvelle-Aquitaine, France|Poitou-Charentes, France
+Occitanie, France|Languedoc-Roussillon, France
+Pays-de-la-Loire, France|Pays de la Loire, France
+Provence-Alpes-Côte-d’Azur, France|Provence-Alpes-Cote d'Azur, France
+Bavaria, Germany|Bayern, Germany
 Munich, Bavaria, Germany|Munich, Bayern, Germany
+Lower Saxony, Germany|Niedersachsen, Germany
+North Rhine-Westphalia, Germany|Nordrhein-Westfalen, Germany
+Rhineland-Palatinate, Germany|Rheinland-Pfalz, Germany
+Saxony, Germany|Sachsen, Germany
+Saxony-Anhalt, Germany|Sachsen-Anhalt, Germany
+Bangalore Urban, Karnataka, India|Bangalore, Karnataka, India
+Telangana, India|Andhra Pradesh, India
+Jakarta, DKI Jakarta, Indonesia|Jakarta, Jakarta Raya, Indonesia
+Leinster, Ireland|Dublin, Ireland
+Central District, Israel|HaMerkaz, Israel
 Tel Aviv District, Israel|Tel Aviv, Israel
 Tel Aviv, Tel Aviv District, Israel|Tel Aviv-yafo, Tel Aviv, Israel
+Abruzzo, Italy|Abruzzi, Italy
+Apulia, Italy|Puglia, Italy
 Rome, Lazio, Italy|Roma, Lazio, Italy
-Jakarta, DKI Jakarta, Indonesia|Jakarta, Jakarta Raya, Indonesia
+Lombardy, Italy|Lombardia, Italy
+Milan, Lombardy, Italy|Milano, Lombardia, Italy
+Piedmont, Italy|Piemonte, Italy
+Ravenna, Italy|Emilia-Romagna, Italy
+Sardinia, Italy|Sardegna, Italy
+Sicily, Italy|Sicilia, Italy
+Trentino-South Tyrol, Italy|Trentino-Alto Adige, Italy
+Tuscany, Italy|Toscana, Italy
+Nairobi, Nairobi City, Kenya|Nairobi, Nairobi Area, Kenya
+Nakuru, Kenya|Rift Valley, Kenya
+Casablanca-Settat, Morocco|Grand Casablanca, Morocco
+Metro Manila, Philippines|Rizal, Philippines
+Lesser Poland Voivodeship, Poland|Malopolskie, Poland
+Singapore, Central Singapore, Singapore|Singapore, Central Region, Singapore
+Gauteng, South Africa|NA - South Africa, South Africa
+Western Cape, South Africa|NA - South Africa, South Africa
+A Coruña, Spain|Galicia, Spain
+Almeria, Spain|Andalucia, Spain
+Barcelona, Spain|Catalonia, Spain
+Bizkaia, Spain|Pais Vasco, Spain
+Córdoba, Spain|Andalucia, Spain
+Gipuzkoa, Spain|Pais Vasco, Spain
+Girona, Spain|Catalonia, Spain
+Granada, Spain|Andalucia, Spain
+Huesca, Spain|Aragon, Spain
+Málaga, Spain|Andalucia, Spain
+Pontevedra, Spain|Galicia, Spain
+Sevilla, Spain|Andalucia, Spain
+Tarragona, Spain|Catalonia, Spain
+Valladolid, Spain|Castilla y Leon, Spain
+Dalarna County, Sweden|Dalarnas Lan, Sweden
+Halland County, Sweden|Hallands Lan, Sweden
+Kalmar County, Sweden|Kalmar Lan, Sweden
+Norrbotten County, Sweden|Norrbottens Lan, Sweden
+Skåne County, Sweden|Skane Lan, Sweden
+Stockholm County, Sweden|Stockholms Lan, Sweden
+Uppsala County, Sweden|Uppsala Lan, Sweden
+Västerbotten County, Sweden|Vasterbottens Lan, Sweden
+Västernorrland County, Sweden|Vasternorrlands Lan, Sweden
+Västmanland County, Sweden|Vastmanlands Lan, Sweden
+Västra Götaland County, Sweden|Vastra Gotaland, Sweden
+Göteborg, Västra Götaland County, Sweden|Gothenburg, Västra Götaland County, Sweden
+Östergötland County, Sweden|Ostergotlands Lan, Sweden
+Béja, Tunisia|Kassrine, Tunisia
+Washington D.C., District of Columbia, United States|Washington, District of Columbia, United States
 Boston, Massachusetts, United States|Allston, Massachusetts, United States
 St. Louis, Missouri, United States|Saint Louis, Missouri, United States
+New York City, New York, United States|New York, New York, United States
